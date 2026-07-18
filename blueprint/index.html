@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pawl — a private messenger, drawn to spec</title>
+<meta name="description" content="Pawl is a fictional concept: a self-hosted, end-to-end encrypted, invite-only messenger for one small team. One binary on your own server, ciphertext and nothing else. Read the drawing before you trust it.">
+<meta name="theme-color" content="#0F2B4A">
+<meta property="og:title" content="Pawl — a private messenger, drawn to spec">
+<meta property="og:description" content="Self-hosted, end-to-end encrypted, invite-only. One binary, your iron, ciphertext only. Drawing set PWL-100.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%230F2B4A'/%3E%3Ccircle cx='32' cy='38' r='16' fill='none' stroke='%23A7C4DF' stroke-width='3'/%3E%3Ccircle cx='32' cy='38' r='5' fill='none' stroke='%23A7C4DF' stroke-width='2'/%3E%3Cpath d='M46 10 L52 26 L36 22 Z' fill='%23FFB347'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@500;600;700;800&family=Spline+Sans+Mono:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ============ PWL-100 · DRAWING STANDARDS ============ */
+:root{
+  --field:#0F2B4A;        /* diazo sheet */
+  --deep:#0A1E36;         /* drafting table */
+  --line:#4A6E92;         /* structural linework */
+  --line-strong:#7FA6C9;  /* primary linework */
+  --dim:#A7C4DF;          /* secondary lettering */
+  --ink:#ECF4FC;          /* white print */
+  --signal:#FFB347;       /* annotation pen (the only warm thing) */
+  --signal-ink:#081627;   /* lettering on amber */
+  --disp:"Big Shoulders Display","Arial Narrow",sans-serif;
+  --mono:"Spline Sans Mono","IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:
+    repeating-linear-gradient(0deg, rgba(127,166,201,.05) 0 1px, transparent 1px 64px),
+    repeating-linear-gradient(90deg, rgba(127,166,201,.05) 0 1px, transparent 1px 64px),
+    var(--deep);
+  color:var(--ink);
+  font-family:var(--mono);
+  font-size:15px;
+  line-height:1.7;
+  overflow-x:clip;
+  -webkit-font-smoothing:antialiased;
+}
+::selection{background:var(--signal);color:var(--signal-ink)}
+a{color:var(--signal);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+a:hover{color:var(--ink)}
+:focus-visible{outline:2px solid var(--signal);outline-offset:3px;border-radius:1px}
+.skip{position:absolute;left:-9999px;top:0;background:var(--signal);color:var(--signal-ink);padding:.6rem 1rem;z-index:99;font-family:var(--mono)}
+.skip:focus-visible{left:12px;top:12px}
+
+/* ---- lettering scale ---- */
+.ann{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.ann-s{font-size:12.5px;letter-spacing:.06em;color:var(--dim)}
+.amber{color:var(--signal)}
+h1,h2,.disp{font-family:var(--disp);text-transform:uppercase;font-weight:800;line-height:.92;letter-spacing:.012em;color:var(--ink)}
+h1{font-size:clamp(52px,9.2vw,104px)}
+h2{font-size:clamp(32px,4.6vw,50px);font-weight:700}
+h3{font-family:var(--disp);text-transform:uppercase;font-weight:600;font-size:clamp(20px,2.4vw,26px);letter-spacing:.03em}
+p.lead{font-size:clamp(15px,1.6vw,16.5px);max-width:56ch;color:var(--dim)}
+p.lead strong{color:var(--ink);font-weight:500}
+em{font-style:italic}
+
+/* ---- the drawing set ---- */
+.set{max-width:1180px;margin:0 auto;padding:22px 14px 60px}
+.sheet{
+  position:relative;
+  background:var(--field);
+  border:1px solid var(--line-strong);
+  margin-top:26px;
+  padding:clamp(20px,4vw,54px);
+}
+.sheet::after{content:"";position:absolute;inset:6px;border:1px solid rgba(127,166,201,.35);pointer-events:none}
+.sheet > *{position:relative;z-index:1}
+
+.sheethead{display:flex;flex-wrap:wrap;gap:8px 24px;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:clamp(24px,4vw,40px)}
+.sheethead .idx{color:var(--signal);margin-right:.35em}
+.sheetfoot{border-top:1px solid var(--line);margin-top:clamp(28px,4vw,44px);padding-top:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
+/* ---- masthead title block ---- */
+.tblock{display:grid;grid-template-columns:auto 1fr repeat(4,auto);border:1px solid var(--line-strong);margin-bottom:clamp(24px,4vw,40px)}
+.tcell{padding:10px 16px;border-left:1px solid var(--line);display:flex;flex-direction:column;justify-content:center;gap:2px}
+.tcell:first-child{border-left:none}
+.tcell .k{font-size:9.5px;letter-spacing:.14em;color:var(--line-strong);text-transform:uppercase}
+.tcell .v{font-size:12.5px;letter-spacing:.05em;color:var(--ink)}
+.brandcell{display:flex;flex-direction:row;align-items:center;gap:10px;padding:10px 18px}
+.brandcell svg{display:block}
+.brandname{font-family:var(--disp);font-weight:800;font-size:30px;letter-spacing:.06em;line-height:1;color:var(--ink)}
+@media (max-width:840px){
+  .tblock{grid-template-columns:1fr 1fr}
+  .brandcell{grid-column:1/-1;border-bottom:1px solid var(--line)}
+  .tcell{border-left:none;border-top:1px solid var(--line)}
+  .tcell:nth-child(2){grid-column:1/-1}
+}
+nav.setnav{display:flex;flex-wrap:wrap;gap:6px 26px;margin-bottom:clamp(28px,5vw,48px)}
+nav.setnav a{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);text-decoration:none;border-bottom:1px dashed var(--line);padding-bottom:2px}
+nav.setnav a:hover{color:var(--signal);border-bottom-color:var(--signal)}
+nav.setnav a .amber{margin-right:.4em}
+
+/* ---- hero ---- */
+.heromast{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:clamp(24px,4vw,56px);align-items:end;margin-bottom:clamp(28px,4vw,44px)}
+@media (max-width:840px){.heromast{grid-template-columns:minmax(0,1fr)}}
+.eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--signal);margin-bottom:18px}
+h1 .dot{color:var(--signal)}
+.herocopy p+p{margin-top:14px}
+.ctarow{display:flex;flex-wrap:wrap;gap:14px;margin-top:26px}
+.btn{
+  display:inline-block;font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+  padding:13px 22px;border:1px solid var(--signal);color:var(--signal);text-decoration:none;background:transparent;
+  cursor:pointer;
+}
+.btn:hover{background:rgba(255,179,71,.1);color:var(--signal)}
+.btn.primary{background:var(--signal);color:var(--signal-ink)}
+.btn.primary:hover{background:#ffc36b;color:var(--signal-ink)}
+
+/* ---- drawings ---- */
+.scrollwrap{overflow-x:auto;overflow-y:hidden;border:1px solid var(--line);background:rgba(10,30,54,.35)}
+.scrollwrap svg{display:block;width:100%;height:auto}
+.scrollwrap.wide svg{min-width:880px}
+.caption{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px 20px;padding-top:10px}
+.panhint{display:none;font-size:10.5px;letter-spacing:.12em;color:var(--signal);text-transform:uppercase;padding-top:6px}
+@media (max-width:920px){.panhint{display:block}}
+
+svg text{font-family:var(--mono)}
+.svgann{font-size:11px;letter-spacing:.05em;fill:var(--dim)}
+.svgann-s{font-size:10px;letter-spacing:.05em;fill:var(--line-strong)}
+.svgink{fill:var(--ink)}
+.svgamber{fill:var(--signal)}
+.ln{stroke:var(--line-strong);stroke-width:1.2;fill:none}
+.ln-thin{stroke:var(--line);stroke-width:1;fill:none}
+.ln-dash{stroke:var(--line-strong);stroke-width:1.2;stroke-dasharray:7 7;fill:none}
+.ln-center{stroke:var(--line);stroke-width:1;stroke-dasharray:18 5 5 5;fill:none}
+.ln-amber{stroke:var(--signal);stroke-width:1.3;fill:none}
+.leader{stroke:var(--line);stroke-width:1;fill:none}
+.tdot{fill:none;stroke:var(--line-strong);stroke-width:1.2}
+.halo{stroke:#0F2B4A;stroke-width:7;paint-order:stroke;stroke-linejoin:round}
+
+/* ---- BOM table ---- */
+table.bom{border-collapse:collapse;width:100%;min-width:820px;font-size:12.5px}
+table.bom caption{text-align:left;padding-bottom:12px}
+table.bom th{
+  font-family:var(--disp);font-weight:600;font-size:14px;letter-spacing:.1em;text-transform:uppercase;
+  text-align:left;color:var(--ink);border-bottom:3px double var(--line-strong);padding:10px 14px;white-space:nowrap;
+}
+table.bom td{border-bottom:1px solid var(--line);padding:13px 14px;vertical-align:top;color:var(--dim)}
+table.bom td.item{color:var(--signal);white-space:nowrap;font-weight:500}
+table.bom td.qty{white-space:nowrap}
+table.bom td.part{font-family:var(--disp);font-weight:600;font-size:16px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
+table.bom td.spec{font-size:11.5px;letter-spacing:.03em;max-width:220px}
+table.bom td.note{min-width:260px}
+table.bom tr:hover td{background:rgba(127,166,201,.06)}
+table.bom tr.notfitted td{color:var(--line-strong)}
+table.bom tr.notfitted td.part{color:var(--dim)}
+table.bom tr.notfitted td.item{color:var(--dim)}
+
+/* ---- detail C ---- */
+.twocol{display:grid;grid-template-columns:minmax(0,6fr) minmax(0,6fr);gap:clamp(28px,4vw,56px);align-items:start}
+@media (max-width:900px){.twocol{grid-template-columns:minmax(0,1fr)}}
+.notes{margin-top:28px;border-top:1px solid var(--line);padding-top:18px}
+.notes ol{list-style:none;counter-reset:n;margin-top:10px}
+.notes li{counter-increment:n;display:grid;grid-template-columns:34px 1fr;gap:10px;padding:7px 0;font-size:12px;letter-spacing:.04em;color:var(--dim)}
+.notes li::before{content:counter(n,decimal-leading-zero);color:var(--signal);font-size:11px;letter-spacing:.1em;padding-top:1px}
+.cmd{position:relative;background:var(--deep);border:1px solid var(--line-strong);padding:20px 20px 18px;margin-top:22px}
+.cmd pre{font-family:var(--mono);font-size:13px;line-height:1.9;overflow-x:auto;color:var(--dim);padding-right:64px}
+.cmd .p{color:var(--signal)}
+.cmd .ok{color:var(--line-strong)}
+.copybtn{
+  position:absolute;top:0;right:0;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  background:var(--field);color:var(--dim);border:none;border-left:1px solid var(--line-strong);border-bottom:1px solid var(--line-strong);
+  padding:8px 14px;cursor:pointer;
+}
+.copybtn:hover{color:var(--signal)}
+.copybtn.done{color:var(--signal-ink);background:var(--signal)}
+.inlinecmd{position:relative;background:var(--deep);border:1px solid var(--line);padding:14px 90px 14px 16px;margin:18px 0 0;max-width:560px}
+.inlinecmd code{font-size:13px;color:var(--dim);word-break:break-all}
+.inlinecmd code .p{color:var(--signal)}
+
+/* ---- release ---- */
+.release{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:clamp(28px,5vw,64px);align-items:center}
+@media (max-width:900px){.release{grid-template-columns:minmax(0,1fr)}}
+.stamp{
+  justify-self:center;transform:rotate(-4deg);border:2px solid var(--signal);color:var(--signal);
+  padding:18px 26px;text-align:center;max-width:300px;
+}
+.stamp .big{font-family:var(--disp);font-weight:700;font-size:26px;letter-spacing:.1em;text-transform:uppercase;line-height:1.05}
+.stamp .sub{font-size:10px;letter-spacing:.16em;text-transform:uppercase;margin-top:8px;color:var(--signal)}
+.sigline{display:flex;gap:28px;flex-wrap:wrap;margin-top:30px}
+.sigline .sig{border-top:1px solid var(--line-strong);padding-top:6px;min-width:150px}
+.sigline .sig .who{font-family:var(--disp);font-weight:600;font-size:17px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink)}
+
+/* ---- colophon ---- */
+.colo{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:clamp(24px,4vw,56px)}
+@media (max-width:840px){.colo{grid-template-columns:minmax(0,1fr)}}
+.colo ul{list-style:none;margin-top:10px}
+.colo li{padding:6px 0;border-bottom:1px dashed var(--line)}
+.colo li a{font-size:12px;letter-spacing:.08em;text-transform:uppercase;text-decoration:none;color:var(--dim)}
+.colo li a:hover{color:var(--signal)}
+.colo li .ref{color:var(--line-strong);font-size:10.5px;margin-left:8px}
+.concept{margin-top:22px;border:1px dashed var(--line-strong);padding:14px 16px;font-size:11.5px;letter-spacing:.04em;color:var(--dim);max-width:60ch}
+
+/* ---- load orchestration (hero only) ---- */
+.rise{opacity:0;transform:translateY(10px);animation:rise .55s ease forwards}
+.rise.d1{animation-delay:.08s}.rise.d2{animation-delay:.2s}.rise.d3{animation-delay:.34s}.rise.d4{animation-delay:.5s}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* ---- machine motion ---- */
+#wheelRot{transform-origin:490px 330px;transition:transform .5s cubic-bezier(.34,1.35,.4,1)}
+#pawlG{transform-origin:605px 172px;transition:transform .22s ease-out}
+#pawlG.kick{transform:rotate(-8deg);transition:transform .1s ease-in}
+#packet{opacity:0;transition:transform .55s ease-in,opacity .18s linear}
+#mkline.flash,#tickerA.flash{transition:none}
+.flash{color:var(--signal)!important;fill:var(--signal)!important}
+
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .rise{opacity:1;transform:none}
+  #packet{opacity:0!important}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#machine">Skip to content</a>
+
+<div class="set">
+
+  <!-- ======================= SHEET 1 — GENERAL ARRANGEMENT ======================= -->
+  <section class="sheet" id="top" aria-label="Sheet 1 of 5 — general arrangement">
+
+    <header class="tblock rise d1" aria-label="Title block">
+      <div class="brandcell">
+        <svg width="44" height="44" viewBox="0 0 64 64" aria-hidden="true">
+          <rect x="1" y="1" width="62" height="62" fill="none" stroke="#7FA6C9" stroke-width="1.5"/>
+          <circle cx="32" cy="38" r="15" fill="none" stroke="#A7C4DF" stroke-width="2.5"/>
+          <circle cx="32" cy="38" r="4.5" fill="none" stroke="#A7C4DF" stroke-width="2"/>
+          <path d="M45 11 L51 27 L35 22 Z" fill="#FFB347"/>
+        </svg>
+        <span class="brandname">Pawl</span>
+      </div>
+      <div class="tcell"><span class="k">Title</span><span class="v">Private messenger — general arrangement</span></div>
+      <div class="tcell"><span class="k">Dwg no.</span><span class="v">PWL-100</span></div>
+      <div class="tcell"><span class="k">Rev</span><span class="v">C</span></div>
+      <div class="tcell"><span class="k">Sheet</span><span class="v">1 of 5</span></div>
+      <div class="tcell"><span class="k">Drawn / Checked / Approved</span><span class="v">You / Your team / No one else</span></div>
+    </header>
+
+    <nav class="setnav rise d1" aria-label="Drawing set index">
+      <a href="#machine"><span class="amber">SHT 01</span>View A — the machine</a>
+      <a href="#parts"><span class="amber">SHT 02</span>Parts list</a>
+      <a href="#wire"><span class="amber">SHT 03</span>Section B-B — on the wire</a>
+      <a href="#selfhost"><span class="amber">SHT 04</span>Detail C — self-host</a>
+      <a href="#release"><span class="amber">SHT 05</span>Release</a>
+    </nav>
+
+    <div class="heromast">
+      <div>
+        <p class="eyebrow rise d2">In a ratchet, the pawl is the part that blocks reverse rotation</p>
+        <h1 class="rise d2">The part that never turns back<span class="dot">.</span></h1>
+      </div>
+      <div class="herocopy rise d3">
+        <p class="lead">Pawl is an <strong>invite-only, end-to-end encrypted messenger</strong> for one small team — 3 to 50 people who already trust each other — on a <strong>server you own</strong>. It is named for the small steel part that stops a ratchet turning backwards, because that is exactly what its encryption does to yesterday&rsquo;s messages.</p>
+        <p class="lead">There is no company in the middle of this drawing. <strong>This sheet is the whole machine.</strong> Read it before you trust it.</p>
+        <div class="ctarow">
+          <a class="btn primary" href="#selfhost">Stand up your server</a>
+          <a class="btn" href="#parts">Read the parts list</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="rise d4" id="machine">
+      <div class="scrollwrap wide">
+        <svg viewBox="0 0 980 640" role="img" aria-label="Engineering schematic of the Double Ratchet: two devices exchange a ciphertext packet; a ratchet wheel advances one tooth per message while a pawl blocks reverse rotation, illustrating forward secrecy. The server appears only as a passive tap holding ciphertext.">
+          <title>View A — Double Ratchet, general arrangement</title>
+          <defs>
+            <pattern id="hatch" width="7" height="7" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="0" x2="0" y2="7" stroke="#4A6E92" stroke-width="1.4"/>
+            </pattern>
+            <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" fill="#7FA6C9"/>
+            </marker>
+            <marker id="arrA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0 0 L10 5 L0 10 z" fill="#FFB347"/>
+            </marker>
+          </defs>
+
+          <!-- centerlines through wheel -->
+          <line class="ln-center" x1="352" y1="330" x2="628" y2="330"/>
+          <line class="ln-center" x1="490" y1="212" x2="490" y2="450"/>
+          <text class="svgann-s" x="490" y="150" text-anchor="middle">SYMMETRIC-KEY RATCHET — 16 TEETH SHOWN, &#8734; FITTED</text>
+
+          <!-- device A -->
+          <g>
+            <rect class="ln" x="48" y="252" width="128" height="156"/>
+            <rect class="ln-thin" x="60" y="264" width="104" height="110"/>
+            <line class="ln-thin" x1="72" y1="342" x2="152" y2="342"/>
+            <line class="ln-thin" x1="72" y1="356" x2="128" y2="356"/>
+            <text class="svgann svgink" x="112" y="292" text-anchor="middle">ALICE</text>
+            <text class="svgann svgamber" x="112" y="312" text-anchor="middle">KEY A-7F31</text>
+            <text class="svgann" x="112" y="436" text-anchor="middle">DEVICE A — ALICE</text>
+            <text class="svgann-s" x="112" y="452" text-anchor="middle">SAN JOSÉ · UTC−06</text>
+          </g>
+
+          <!-- device B -->
+          <g>
+            <rect class="ln" x="804" y="252" width="128" height="156"/>
+            <rect class="ln-thin" x="816" y="264" width="104" height="110"/>
+            <line class="ln-thin" x1="828" y1="342" x2="908" y2="342"/>
+            <line class="ln-thin" x1="828" y1="356" x2="884" y2="356"/>
+            <text class="svgann svgink" x="868" y="292" text-anchor="middle">BOB</text>
+            <text class="svgann svgamber" x="868" y="312" text-anchor="middle">KEY B-90C4</text>
+            <text class="svgann" x="868" y="436" text-anchor="middle">DEVICE B — BOB</text>
+            <text class="svgann-s" x="868" y="452" text-anchor="middle">TAIPEI · UTC+08</text>
+          </g>
+
+          <!-- transmission line -->
+          <line class="ln-dash" x1="176" y1="330" x2="384" y2="330"/>
+          <line class="ln-dash" x1="596" y1="330" x2="804" y2="330" marker-end="url(#arr)"/>
+
+          <!-- server tap -->
+          <circle cx="700" cy="330" r="3.5" fill="#7FA6C9"/>
+          <line class="ln-thin" x1="700" y1="330" x2="700" y2="392"/>
+          <rect x="628" y="392" width="152" height="64" fill="url(#hatch)" stroke="#7FA6C9" stroke-width="1.2"/>
+          <rect x="640" y="406" width="128" height="22" fill="#0F2B4A" stroke="#7FA6C9" stroke-width="1"/>
+          <text class="svgann svgink" x="704" y="421" text-anchor="middle">YOUR SERVER</text>
+          <text class="svgann-s" x="704" y="474" text-anchor="middle">HOLDS: CIPHERTEXT — KEYS: NONE</text>
+          <text class="svgann-s" x="704" y="490" text-anchor="middle">STOLEN DISK = NOISE, NOTARISED</text>
+
+          <!-- ratchet wheel -->
+          <g id="wheelRot">
+            <circle cx="490" cy="330" r="104" fill="none" stroke="#4A6E92" stroke-width="1" stroke-dasharray="4 5"/>
+            <circle cx="490" cy="330" r="86" fill="none" stroke="#4A6E92" stroke-width="1" stroke-dasharray="4 5"/>
+            <path id="gearPath" d="" fill="#0F2B4A" stroke="#A7C4DF" stroke-width="1.6"/>
+            <g stroke="#7FA6C9" stroke-width="1.2">
+              <line x1="490" y1="248" x2="490" y2="302"/>
+              <line x1="490" y1="358" x2="490" y2="412"/>
+              <line x1="408" y1="330" x2="462" y2="330"/>
+              <line x1="518" y1="330" x2="572" y2="330"/>
+            </g>
+            <circle cx="490" cy="330" r="28" fill="#0F2B4A" stroke="#A7C4DF" stroke-width="1.4"/>
+            <circle cx="490" cy="330" r="11" fill="none" stroke="#A7C4DF" stroke-width="1.4"/>
+            <rect x="485" y="314" width="10" height="8" fill="#0F2B4A" stroke="#A7C4DF" stroke-width="1.2"/>
+          </g>
+
+          <!-- pawl (the brand, in the pen colour) -->
+          <g id="pawlG">
+            <path d="M598 163 L544 234 L539 253 L560 247 L615 185 Z" fill="#FFB347" stroke="#FFB347" stroke-width="1"/>
+            <circle cx="605" cy="172" r="8" fill="#0F2B4A" stroke="#FFB347" stroke-width="1.6"/>
+            <circle cx="605" cy="172" r="2.4" fill="#FFB347"/>
+          </g>
+          <polyline class="ln-thin" points="616,162 626,154 620,148 632,142 626,136 638,130 645,126"/>
+          <g stroke="#4A6E92" stroke-width="1.2">
+            <line x1="645" y1="126" x2="659" y2="126"/>
+            <line x1="648" y1="126" x2="643" y2="118"/>
+            <line x1="654" y1="126" x2="649" y2="118"/>
+            <line x1="660" y1="126" x2="655" y2="118"/>
+          </g>
+
+          <!-- callout: pawl -->
+          <polyline class="leader" points="700,104 655,142 607,194"/>
+          <circle class="tdot" cx="604" cy="197" r="3"/>
+          <text class="svgann" x="952" y="96" text-anchor="end">PAWL — PERMITS FORWARD MOTION ONLY</text>
+          <text class="svgann svgamber" x="952" y="112" text-anchor="end">YESTERDAY&rsquo;S KEYS CANNOT BE RE-CUT</text>
+
+          <!-- callout: tooth -->
+          <text class="svgann" x="64" y="110">ONE TOOTH = ONE MESSAGE KEY,</text>
+          <text class="svgann" x="64" y="126">ADVANCE 22.5&#176; PER MESSAGE, TYP.</text>
+          <polyline class="leader" points="300,134 360,190 420,247"/>
+          <circle class="tdot" cx="423" cy="250" r="3"/>
+
+          <!-- callout: X3DH -->
+          <text class="svgann" x="196" y="390">X3DH HANDSHAKE — SECRET AGREED</text>
+          <text class="svgann" x="196" y="406">OFF-SHEET, NEVER TRANSMITTED</text>
+          <polyline class="leader" points="300,378 300,334"/>
+          <circle class="tdot" cx="300" cy="331" r="3"/>
+
+          <!-- callout: sealed sender -->
+          <text class="svgann" x="618" y="222">SEALED SENDER — ENVELOPE HIDES</text>
+          <text class="svgann" x="618" y="238">WHO WRITES TO WHOM</text>
+          <polyline class="leader" points="700,246 700,290 736,324"/>
+          <circle class="tdot" cx="739" cy="327" r="3"/>
+
+          <!-- callout: device keys -->
+          <polyline class="leader" points="868,412 868,492"/>
+          <text class="svgann" x="868" y="512" text-anchor="middle">EVERY DEVICE CUTS ITS OWN KEY</text>
+          <text class="svgann-s" x="868" y="528" text-anchor="middle">LOSE ONE &#8594; WIPE IT REMOTELY</text>
+
+          <!-- KDF chain -->
+          <rect class="ln" x="368" y="486" width="96" height="30"/>
+          <text class="svgann svgink" id="ckPrev" x="416" y="506" text-anchor="middle">CK-0107</text>
+          <line class="ln" x1="464" y1="501" x2="516" y2="501" marker-end="url(#arr)"/>
+          <text class="svgann-s" x="490" y="494" text-anchor="middle">HKDF</text>
+          <rect class="ln" x="516" y="486" width="96" height="30"/>
+          <text class="svgann svgink" id="ckNext" x="564" y="506" text-anchor="middle">CK-0108</text>
+          <text class="svgann-s" x="490" y="532" text-anchor="middle">ONE-WAY — NO PATH BACK</text>
+          <text class="svgann" id="mkline" x="490" y="556" text-anchor="middle">MK-0108 — CUT · USED · DESTROYED</text>
+
+          <!-- packet -->
+          <g id="packet">
+            <rect x="-10" y="-7" width="20" height="14" fill="#0F2B4A" stroke="#FFB347" stroke-width="1.4"/>
+            <polyline points="-10,-7 0,2 10,-7" fill="none" stroke="#FFB347" stroke-width="1.2"/>
+          </g>
+
+          <!-- overall dimension -->
+          <line class="ln-thin" x1="112" y1="470" x2="112" y2="600"/>
+          <line class="ln-thin" x1="868" y1="544" x2="868" y2="600"/>
+          <line class="ln-thin" x1="112" y1="592" x2="868" y2="592" marker-start="url(#arr)" marker-end="url(#arr)"/>
+          <text class="svgann" x="490" y="584" text-anchor="middle">A &#8596; B — 11 942 km — ENCRYPTED EDGE TO EDGE</text>
+          <text class="svgann-s" x="490" y="614" text-anchor="middle">(DIM. VARIES — WORKS FROM ANY TWO POINTS ON EARTH)</text>
+        </svg>
+      </div>
+      <p class="panhint">Sheet wider than viewport — pan &#8594;</p>
+      <div class="caption">
+        <span class="ann">View A — Double Ratchet, general arrangement · scale 1:1</span>
+        <span class="ann" id="tickerA">Session log: msg 0108 encrypted · MK-0107 destroyed</span>
+      </div>
+    </div>
+
+    <footer class="sheetfoot">
+      <span class="ann">SHT 01/05 · General arrangement</span>
+      <span class="ann">Do not scale drawing</span>
+    </footer>
+  </section>
+
+  <!-- ======================= SHEET 2 — PARTS LIST ======================= -->
+  <section class="sheet" id="parts" aria-label="Sheet 2 of 5 — parts list">
+    <header class="sheethead">
+      <h2><span class="idx">02</span>Parts list</h2>
+      <span class="ann">Bill of materials · all parts ship fitted · qty column is load-bearing</span>
+    </header>
+
+    <div class="scrollwrap">
+      <table class="bom">
+        <thead>
+          <tr><th>Item</th><th>Qty</th><th>Part</th><th>Specification</th><th>Field note</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="item">01</td><td class="qty">1 / pair</td><td class="part">Double Ratchet</td>
+            <td class="spec">X25519 · HKDF-SHA-256 · AES-256-GCM</td>
+            <td class="note">A new key for every message. The old one is destroyed before your reply lands.</td>
+          </tr>
+          <tr>
+            <td class="item">02</td><td class="qty">1 / person</td><td class="part">Invite token</td>
+            <td class="spec">signed · single-use · revocable</td>
+            <td class="note">No sign-up page, no phone number. Someone who knows you cuts you a key — and can uncut it.</td>
+          </tr>
+          <tr>
+            <td class="item">03</td><td class="qty">1</td><td class="part">Sealed sender</td>
+            <td class="spec">envelope routing · metadata starvation</td>
+            <td class="note">The server delivers mail it cannot read, between people it cannot name.</td>
+          </tr>
+          <tr>
+            <td class="item">04</td><td class="qty">1 / channel</td><td class="part">Burn timer</td>
+            <td class="spec">5 s – 30 d · burn-on-read · global vanish</td>
+            <td class="note">Set a channel to forget faster than people do.</td>
+          </tr>
+          <tr>
+            <td class="item">05</td><td class="qty">1 / device</td><td class="part">Device key</td>
+            <td class="spec">independent identity · remote wipe</td>
+            <td class="note">A laptop lost in a taxi is a two-minute fix, not a breach.</td>
+          </tr>
+          <tr>
+            <td class="item">06</td><td class="qty">2 / pair</td><td class="part">Safety number</td>
+            <td class="spec">60-digit fingerprint · QR check</td>
+            <td class="note">Read it aloud once, on a call. If it ever changes, the whole room hears about it.</td>
+          </tr>
+          <tr>
+            <td class="item">07</td><td class="qty">1</td><td class="part">Offline queue</td>
+            <td class="spec">delta sync · low-bandwidth mode</td>
+            <td class="note">Written in a tunnel, delivered at the next tower. Survives 2G with dignity.</td>
+          </tr>
+          <tr>
+            <td class="item">08</td><td class="qty">1</td><td class="part">Relay</td>
+            <td class="spec">voice · video · screen share · self-hosted TURN</td>
+            <td class="note">Calls bounce through your box, not a company&rsquo;s. Hang up, and it remembers nothing.</td>
+          </tr>
+          <tr class="notfitted">
+            <td class="item">09</td><td class="qty">0</td><td class="part">Telemetry</td>
+            <td class="spec">not fitted</td>
+            <td class="note">No analytics, no crash reports, no home to phone. The quantity is the feature.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="panhint">Table wider than viewport — pan &#8594;</p>
+
+    <footer class="sheetfoot">
+      <span class="ann">SHT 02/05 · Parts list</span>
+      <span class="ann">Item 09 listed for completeness</span>
+    </footer>
+  </section>
+
+  <!-- ======================= SHEET 3 — SECTION B-B ======================= -->
+  <section class="sheet" id="wire" aria-label="Sheet 3 of 5 — section B-B, one day on the wire">
+    <header class="sheethead">
+      <h2><span class="idx">03</span>Section B-B — one day on the wire</h2>
+      <span class="ann">Three people · three time zones · scale: full width = 24 h UTC</span>
+    </header>
+
+    <div class="scrollwrap wide">
+      <svg viewBox="0 0 1000 470" role="img" aria-label="Timing diagram of one UTC day across three team members in Costa Rica, Norway and Sri Lanka: messages as pulses on their rails, a burn-on-read note, an encrypted call band, an offline gap with queued messages and delta sync, and a loud new-device-key alert.">
+        <title>Section B-B — one UTC day, three time zones</title>
+        <defs>
+          <pattern id="hatch2" width="6" height="6" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="#7FA6C9" stroke-width="1.1"/>
+          </pattern>
+          <marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 z" fill="#7FA6C9"/>
+          </marker>
+        </defs>
+
+        <!-- time axis -->
+        <line class="ln" x1="60" y1="40" x2="960" y2="40"/>
+        <g class="svgann-s">
+          <line class="ln-thin" x1="60" y1="34" x2="60" y2="46"/><text x="60" y="26" text-anchor="middle">00:00</text>
+          <line class="ln-thin" x1="210" y1="34" x2="210" y2="46"/><text x="210" y="26" text-anchor="middle">04:00</text>
+          <line class="ln-thin" x1="360" y1="34" x2="360" y2="46"/><text x="360" y="26" text-anchor="middle">08:00</text>
+          <line class="ln-thin" x1="510" y1="34" x2="510" y2="46"/><text x="510" y="26" text-anchor="middle">12:00</text>
+          <line class="ln-thin" x1="660" y1="34" x2="660" y2="46"/><text x="660" y="26" text-anchor="middle">16:00</text>
+          <line class="ln-thin" x1="810" y1="34" x2="810" y2="46"/><text x="810" y="26" text-anchor="middle">20:00</text>
+          <line class="ln-thin" x1="960" y1="34" x2="960" y2="46"/><text x="960" y="26" text-anchor="middle">24:00 UTC</text>
+        </g>
+
+        <!-- rail 1 : M. Ibarra -->
+        <text class="svgann" x="60" y="106">M. IBARRA — SAN JOSÉ (UTC−06)</text>
+        <rect x="247" y="127" width="300" height="26" fill="rgba(74,110,146,.18)" stroke="#4A6E92" stroke-width="1" stroke-dasharray="3 4"/>
+        <text class="svgann-s halo" x="397" y="144" text-anchor="middle">LOCAL NIGHT</text>
+        <line class="ln" x1="60" y1="140" x2="566" y2="140"/>
+        <line class="ln-thin" x1="566" y1="140" x2="660" y2="140" stroke-dasharray="3 6"/>
+        <line class="ln" x1="660" y1="140" x2="960" y2="140"/>
+        <polyline class="ln" points="562,133 570,147"/><polyline class="ln" points="656,133 664,147"/>
+        <text class="svgann-s" x="613" y="170" text-anchor="middle">OFFLINE — 14 MSG QUEUED</text>
+        <line class="ln-amber" x1="660" y1="118" x2="660" y2="136" marker-end="url(#arrA)"/>
+        <text class="svgann-s" x="613" y="186" text-anchor="middle">DELTA SYNC — 41 KB · 3.1 s ON 2G</text>
+        <line class="ln-amber" x1="672" y1="140" x2="672" y2="120"/>
+        <text class="svgann svgink" x="684" y="132">16:20 &#8220;caught up. shipping.&#8221;</text>
+        <line class="ln-amber" x1="854" y1="140" x2="854" y2="120"/>
+        <text class="svgann svgink" x="850" y="112" text-anchor="end">21:10 &#8220;shipped. good night, oslo.&#8221;</text>
+
+        <!-- rail 2 : J. Halvorsen -->
+        <text class="svgann" x="60" y="216">J. HALVORSEN — OSLO (UTC+02)</text>
+        <rect x="60" y="237" width="187" height="26" fill="rgba(74,110,146,.18)" stroke="#4A6E92" stroke-width="1" stroke-dasharray="3 4"/>
+        <rect x="847" y="237" width="113" height="26" fill="rgba(74,110,146,.18)" stroke="#4A6E92" stroke-width="1" stroke-dasharray="3 4"/>
+        <text class="svgann-s halo" x="153" y="254" text-anchor="middle">LOCAL NIGHT</text>
+        <line class="ln" x1="60" y1="250" x2="960" y2="250"/>
+        <line class="ln-amber" x1="291" y1="250" x2="291" y2="230"/>
+        <text class="svgann svgink" x="298" y="222">06:10 &#8220;standup notes &#8594; #ship&#8221;</text>
+        <rect x="356" y="270" width="12" height="16" fill="url(#hatch2)" stroke="#FFB347" stroke-width="1.2"/>
+        <line class="ln-amber" x1="362" y1="250" x2="362" y2="270"/>
+        <text class="svgann svgink" x="344" y="282" text-anchor="end">08:05 &#8220;vault combo&#8221; — BURN-ON-READ</text>
+        <text class="svgann-s" x="344" y="298" text-anchor="end">OPENED 09:02 &#8594; ASH 09:02 · DIM TO &#8709;</text>
+
+        <!-- call band, rails 2-3 -->
+        <rect x="416" y="230" width="14" height="150" fill="rgba(255,179,71,.16)" stroke="#FFB347" stroke-width="1"/>
+        <text class="svgann-s svgamber" x="437" y="330">09:30 — VOICE + SCREEN · 22 MIN</text>
+        <text class="svgann-s svgamber" x="437" y="346">E2EE — RELAY: YOURS</text>
+
+        <!-- rail 3 : R. Fernando -->
+        <text class="svgann" x="60" y="326">R. FERNANDO — COLOMBO (UTC+05:30)</text>
+        <rect x="716" y="347" width="244" height="26" fill="rgba(74,110,146,.18)" stroke="#4A6E92" stroke-width="1" stroke-dasharray="3 4"/>
+        <rect x="60" y="347" width="56" height="26" fill="rgba(74,110,146,.18)" stroke="#4A6E92" stroke-width="1" stroke-dasharray="3 4"/>
+        <text class="svgann-s halo" x="838" y="364" text-anchor="middle">LOCAL NIGHT</text>
+        <line class="ln" x1="60" y1="360" x2="960" y2="360"/>
+        <line class="ln-amber" x1="320" y1="360" x2="320" y2="380"/>
+        <text class="svgann svgink" x="314" y="394" >06:55 &#8220;reading now&#8221;</text>
+        <path d="M700 352 L716 352 L708 338 Z" fill="#FFB347"/>
+        <text class="svgann svgamber" x="700" y="416" text-anchor="middle">17:20 — NEW DEVICE KEY: R.F. ADDED A LAPTOP</text>
+        <text class="svgann-s" x="700" y="432" text-anchor="middle">SAFETY NUMBER CHANGED — VERIFY BEFORE TRUST · LOUD BY DESIGN</text>
+        <line class="ln-thin" x1="708" y1="356" x2="708" y2="400"/>
+
+        <!-- bottom note -->
+        <text class="svgann-s" x="510" y="462" text-anchor="middle">TICK = MESSAGE · HATCH = BURN-ON-READ · DASHED RAIL = OFFLINE · AMBER BAND = CALL VIA YOUR RELAY</text>
+      </svg>
+    </div>
+    <p class="panhint">Sheet wider than viewport — pan &#8594;</p>
+    <div class="caption">
+      <span class="ann">Section B-B · messages drawn in plaintext only because you are on this team</span>
+      <span class="ann amber">The server&rsquo;s copy of this entire day: 214 KB of noise</span>
+    </div>
+
+    <footer class="sheetfoot">
+      <span class="ann">SHT 03/05 · Section B-B</span>
+      <span class="ann">#ship channel timer: 7 d — sheet redrawn nightly</span>
+    </footer>
+  </section>
+
+  <!-- ======================= SHEET 4 — DETAIL C, SELF-HOST ======================= -->
+  <section class="sheet" id="selfhost" aria-label="Sheet 4 of 5 — detail C, self-host">
+    <header class="sheethead">
+      <h2><span class="idx">04</span>Detail C — one part, your iron</h2>
+      <span class="ann">Assembly requires: one machine, one command, no landlord</span>
+    </header>
+
+    <div class="twocol">
+      <div>
+        <p class="lead">The server is a <strong>single static binary — 12 MB</strong>. No database to feed, no container zoo, no ops rotation. It runs on the $5 VPS you already rent, or a Raspberry Pi on a bookshelf.</p>
+        <p class="lead" style="margin-top:14px">Everything it ever writes to disk is ciphertext, so your backup strategy is <strong>cp</strong> and your breach model is <em>&ldquo;someone stole some noise.&rdquo;</em></p>
+
+        <div class="cmd">
+          <button class="copybtn" type="button" data-copy="curl -fsSL https://get.pawl.example/install.sh | sh
+pawl serve --data /var/lib/pawl">Copy</button>
+          <pre><span class="p">$</span> curl -fsSL https://get.pawl.example/install.sh | sh
+<span class="p">$</span> pawl serve --data /var/lib/pawl
+<span class="ok">&#10003; listening :443 — drawing PWL-100 in service
+&#10003; storage: ciphertext only — 0 keys on disk</span></pre>
+        </div>
+
+        <div class="notes">
+          <span class="ann amber">General notes — flags &#9650; on the drawing refer here</span>
+          <ol>
+            <li>Server stores ciphertext only. Keys live on member devices and nowhere else.</li>
+            <li>A stolen disk and a subpoena yield the same material: noise.</li>
+            <li>Builds are reproducible. Compile the sheet yourself and compare checksums before you trust ours.</li>
+            <li>Moving house = copying one directory. The server is furniture, not a landlord.</li>
+            <li>Do not scale drawing.</li>
+          </ol>
+        </div>
+      </div>
+
+      <div>
+        <div class="scrollwrap">
+          <svg viewBox="0 0 460 360" role="img" aria-label="Dimensioned drawing of a Raspberry Pi single-board computer, 85 by 56 millimetres, annotated as the reference installation running the 12-megabyte pawl binary, with an SD card holding years of ciphertext.">
+            <title>Detail C — reference installation, Raspberry Pi</title>
+            <defs>
+              <pattern id="pins" width="9" height="14" patternUnits="userSpaceOnUse">
+                <rect x="2" y="2" width="5" height="4" fill="none" stroke="#7FA6C9" stroke-width="1"/>
+                <rect x="2" y="8" width="5" height="4" fill="none" stroke="#7FA6C9" stroke-width="1"/>
+              </pattern>
+            </defs>
+
+            <!-- annotation: binary -->
+            <text class="svgann" x="70" y="34">RUNS pawl v1.0 — ONE STATIC BINARY, 12 MB</text>
+            <path d="M352 30 L366 30 L359 17 Z" fill="none" stroke="#FFB347" stroke-width="1.2"/>
+            <text x="359" y="28" text-anchor="middle" font-size="8" fill="#FFB347">3</text>
+            <polyline class="leader" points="216,40 218,110 220,138"/>
+            <circle class="tdot" cx="220" cy="141" r="3"/>
+
+            <!-- board -->
+            <rect class="ln" x="70" y="70" width="300" height="198"/>
+            <circle class="ln-thin" cx="86" cy="86" r="7"/><circle cx="86" cy="86" r="2.5" fill="#7FA6C9"/>
+            <circle class="ln-thin" cx="354" cy="86" r="7"/><circle cx="354" cy="86" r="2.5" fill="#7FA6C9"/>
+            <circle class="ln-thin" cx="86" cy="252" r="7"/><circle cx="86" cy="252" r="2.5" fill="#7FA6C9"/>
+            <circle class="ln-thin" cx="354" cy="252" r="7"/><circle cx="354" cy="252" r="2.5" fill="#7FA6C9"/>
+            <rect x="100" y="76" width="180" height="16" fill="url(#pins)" stroke="#7FA6C9" stroke-width="1"/>
+            <rect class="ln" x="190" y="140" width="64" height="64"/>
+            <text class="svgann" x="222" y="177" text-anchor="middle">SoC</text>
+            <rect class="ln-thin" x="272" y="150" width="40" height="40"/>
+            <rect class="ln" x="352" y="180" width="26" height="44"/>
+            <rect class="ln-thin" x="352" y="120" width="26" height="40"/>
+            <rect class="ln" x="52" y="120" width="18" height="40"/>
+
+            <!-- annotation: port -->
+            <text class="svgann" x="452" y="120" text-anchor="end">:443 — WSS + TLS</text>
+            <polyline class="leader" points="430,128 400,160 382,196"/>
+            <circle class="tdot" cx="380" cy="199" r="3"/>
+
+            <!-- annotation: SD -->
+            <text class="svgann" x="40" y="334">64 GB SD — YEARS OF CIPHERTEXT</text>
+            <path d="M262 330 L276 330 L269 317 Z" fill="none" stroke="#FFB347" stroke-width="1.2"/>
+            <text x="269" y="328" text-anchor="middle" font-size="8" fill="#FFB347">2</text>
+            <polyline class="leader" points="52,322 48,240 56,164"/>
+            <circle class="tdot" cx="57" cy="161" r="3"/>
+
+            <!-- dimensions -->
+            <line class="ln-thin" x1="70" y1="274" x2="70" y2="302"/>
+            <line class="ln-thin" x1="370" y1="274" x2="370" y2="302"/>
+            <line class="ln-thin" x1="70" y1="296" x2="370" y2="296" marker-start="url(#arr2)" marker-end="url(#arr2)"/>
+            <text class="svgann-s" x="220" y="290" text-anchor="middle">85.0</text>
+            <line class="ln-thin" x1="64" y1="70" x2="30" y2="70"/>
+            <line class="ln-thin" x1="64" y1="268" x2="30" y2="268"/>
+            <line class="ln-thin" x1="36" y1="70" x2="36" y2="268" marker-start="url(#arr2)" marker-end="url(#arr2)"/>
+            <text class="svgann-s" x="20" y="173" text-anchor="middle" transform="rotate(-90 20 173)">56.0</text>
+          </svg>
+        </div>
+        <div class="caption">
+          <span class="ann">Detail C — reference installation: Raspberry Pi 4 on a bookshelf · scale 2:1</span>
+        </div>
+        <p class="ann-s" style="margin-top:14px">Any shelf. Any country. The $5 VPS works identically — it is just a worse shelf.</p>
+      </div>
+    </div>
+
+    <footer class="sheetfoot">
+      <span class="ann">SHT 04/05 · Detail C</span>
+      <span class="ann">Material: open source · finish: zero telemetry</span>
+    </footer>
+  </section>
+
+  <!-- ======================= SHEET 5 — RELEASE ======================= -->
+  <section class="sheet" id="release" aria-label="Sheet 5 of 5 — release">
+    <header class="sheethead">
+      <h2><span class="idx">05</span>Release</h2>
+      <span class="ann">Final approvals · no further signatures required</span>
+    </header>
+
+    <div class="release">
+      <div>
+        <h3>Your server. Your keys. Your people.</h3>
+        <p class="lead" style="margin-top:16px">Pawl has no sign-up page and never will. If your team already runs one, ask any member to cut you a token — it takes them ten seconds:</p>
+        <div class="inlinecmd">
+          <button class="copybtn" type="button" data-copy="pawl invite cut --for rana --ttl 72h">Copy</button>
+          <code><span class="p">$</span> pawl invite cut --for rana --ttl 72h</code>
+        </div>
+        <p class="lead" style="margin-top:18px">If you are the one who runs things, the whole machine is one download away — and every line of it is yours to read first.</p>
+        <div class="ctarow">
+          <a class="btn primary" href="#colophon">Get the binary — 12 MB, static</a>
+          <a class="btn" href="#colophon">Read the threat model</a>
+        </div>
+        <div class="sigline">
+          <div class="sig"><span class="ann">Drawn</span><br><span class="who">You</span></div>
+          <div class="sig"><span class="ann">Checked</span><br><span class="who">Your team</span></div>
+          <div class="sig"><span class="ann">Approved</span><br><span class="who">No one else</span></div>
+        </div>
+      </div>
+      <div class="stamp" role="presentation">
+        <div class="big">Released<br>for service</div>
+        <div class="sub">REV C · PWL-100 · 2026-07-18</div>
+      </div>
+    </div>
+
+    <!-- ======================= COLOPHON / FOOTER ======================= -->
+    <footer class="colo" id="colophon" style="border-top:1px solid var(--line);margin-top:clamp(32px,5vw,52px);padding-top:clamp(24px,4vw,36px)">
+      <div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true">
+            <rect x="1" y="1" width="62" height="62" fill="none" stroke="#7FA6C9" stroke-width="1.5"/>
+            <circle cx="32" cy="38" r="15" fill="none" stroke="#A7C4DF" stroke-width="2.5"/>
+            <circle cx="32" cy="38" r="4.5" fill="none" stroke="#A7C4DF" stroke-width="2"/>
+            <path d="M45 11 L51 27 L35 22 Z" fill="#FFB347"/>
+          </svg>
+          <span class="disp" style="font-size:22px">Pawl — drawing set PWL-100</span>
+        </div>
+        <p class="ann-s" style="margin-top:14px;max-width:52ch">Open source under AGPL-3.0. Reproducible builds, signed releases, zero telemetry. The drawing is the documentation.</p>
+        <p class="concept">This page is a fictional design concept — Pawl is not a real product and no binary exists. Drawn 2026-07-18 as a study of trust rendered as an engineering document.</p>
+      </div>
+      <div>
+        <span class="ann amber">Reference sheets</span>
+        <ul>
+          <li><a href="#colophon">Source &amp; releases<span class="ref">PWL-200</span></a></li>
+          <li><a href="#colophon">Threat model<span class="ref">PWL-402</span></a></li>
+          <li><a href="#colophon">Verify a build<span class="ref">PWL-403</span></a></li>
+          <li><a href="#colophon">Key transparency log<span class="ref">PWL-404</span></a></li>
+        </ul>
+        <p class="ann" style="margin-top:26px">SHT 05/05 — end of set · do not scale drawing<br>&#169; nobody, 2026 — the lines are public domain</p>
+      </div>
+    </footer>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---- draw the ratchet wheel (sawtooth profile) ---- */
+  var gp = document.getElementById('gearPath');
+  if (gp){
+    var cx=490, cy=330, rr=86, rt=104, N=16, d='';
+    for (var i=0;i<N;i++){
+      var a0=(i/N)*Math.PI*2 - Math.PI/2;
+      var a1=((i+0.78)/N)*Math.PI*2 - Math.PI/2;
+      d += (i?'L':'M') + (cx+rr*Math.cos(a0)).toFixed(1)+' '+(cy+rr*Math.sin(a0)).toFixed(1);
+      d += 'L' + (cx+rt*Math.cos(a1)).toFixed(1)+' '+(cy+rt*Math.sin(a1)).toFixed(1);
+    }
+    gp.setAttribute('d', d+'Z');
+  }
+
+  /* ---- orchestrated machine loop: one tooth per message ---- */
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var wheel = document.getElementById('wheelRot');
+  var pawl  = document.getElementById('pawlG');
+  var packet= document.getElementById('packet');
+  var ckPrev= document.getElementById('ckPrev');
+  var ckNext= document.getElementById('ckNext');
+  var mkline= document.getElementById('mkline');
+  var ticker= document.getElementById('tickerA');
+  var angle = 0, n = 108, inView = true, running = false;
+
+  function pad(x){ return ('0000'+x).slice(-4); }
+
+  if ('IntersectionObserver' in window && wheel){
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){ inView = e.isIntersecting; });
+    }, {threshold: 0.05});
+    io.observe(wheel.closest('svg'));
+  }
+
+  function stepMachine(){
+    if (running || reduce.matches || document.hidden || !inView || !wheel) return;
+    running = true;
+
+    /* phase 1 — packet leaves device A for the ratchet */
+    packet.style.transition = 'none';
+    packet.style.transform  = 'translate(176px,330px)';
+    packet.style.opacity    = '1';
+    void packet.getBoundingClientRect();
+    packet.style.transition = 'transform .55s ease-in, opacity .18s linear';
+    packet.style.transform  = 'translate(378px,330px)';
+
+    setTimeout(function(){
+      /* phase 2 — the wheel advances one tooth; the pawl clicks */
+      packet.style.opacity = '0';
+      angle += 22.5;
+      wheel.style.transform = 'rotate('+angle+'deg)';
+      pawl.classList.add('kick');
+      setTimeout(function(){ pawl.classList.remove('kick'); }, 130);
+
+      n += 1;
+      ckPrev.textContent = 'CK-'+pad(n-1);
+      ckNext.textContent = 'CK-'+pad(n);
+      mkline.textContent = 'MK-'+pad(n)+' — CUT · USED · DESTROYED';
+      ticker.textContent = 'Session log: msg '+pad(n)+' encrypted · MK-'+pad(n-1)+' destroyed';
+      mkline.classList.add('flash'); ticker.classList.add('flash');
+      setTimeout(function(){ mkline.classList.remove('flash'); ticker.classList.remove('flash'); }, 420);
+
+      /* phase 3 — ciphertext continues to device B */
+      setTimeout(function(){
+        packet.style.transition = 'none';
+        packet.style.transform  = 'translate(596px,330px)';
+        packet.style.opacity    = '1';
+        void packet.getBoundingClientRect();
+        packet.style.transition = 'transform .55s ease-out, opacity .18s linear';
+        packet.style.transform  = 'translate(800px,330px)';
+        setTimeout(function(){
+          packet.style.opacity = '0';
+          running = false;
+        }, 560);
+      }, 320);
+    }, 570);
+  }
+
+  if (wheel && !reduce.matches){
+    setTimeout(stepMachine, 900);
+    setInterval(stepMachine, 2400);
+  }
+
+  /* ---- copy buttons, with execCommand fallback ---- */
+  function flashDone(btn){
+    var t = btn.textContent;
+    btn.textContent = 'Copied';
+    btn.classList.add('done');
+    setTimeout(function(){ btn.textContent = t; btn.classList.remove('done'); }, 1600);
+  }
+  function fallbackCopy(text, btn){
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly','');
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try { if (document.execCommand('copy')) flashDone(btn); } catch(e){}
+    document.body.removeChild(ta);
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.copybtn'), function(btn){
+    btn.addEventListener('click', function(){
+      var text = btn.getAttribute('data-copy');
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(function(){ flashDone(btn); },
+          function(){ fallbackCopy(text, btn); });
+      } else {
+        fallbackCopy(text, btn);
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
