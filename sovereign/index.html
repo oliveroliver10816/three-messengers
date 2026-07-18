@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ENKLAV — The Sovereign Messenger</title>
+<meta name="description" content="A self-hosted, end-to-end encrypted, invite-only messenger for 3–50 people who trust each other. Your server is the territory. Your keys are the border. A fictional design concept.">
+<meta name="theme-color" content="#171310">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2064%2064'%3E%3Crect%20width='64'%20height='64'%20fill='%23EAE3D1'/%3E%3Ccircle%20cx='32'%20cy='32'%20r='25'%20fill='%23171310'/%3E%3Cpolygon%20points='4,60%2018,64%2036,32'%20fill='%23C2340F'/%3E%3Ccircle%20cx='42'%20cy='22'%20r='6'%20fill='%23EAE3D1'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=Golos+Text:wght@400;500;600;700&family=Martian+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ============ ENKLAV — three inks on newsprint ============ */
+:root{
+  --newsprint:#EAE3D1;
+  --newsprint-hi:#F2ECDC;
+  --ink:#171310;
+  --ink-soft:#241E17;
+  --vermilion:#C2340F;
+  --oxblood:#8C2A0E;
+  --khaki:#5A5142;
+  --bone-muted:#B7AC95;
+  --display:"Big Shoulders Display",Impact,sans-serif;
+  --body:"Golos Text",system-ui,sans-serif;
+  --mono:"Martian Mono","Courier New",monospace;
+  --rule:3px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+html,body{overflow-x:clip}
+body{
+  background:var(--newsprint);
+  color:var(--ink);
+  font-family:var(--body);
+  font-size:17px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+}
+/* paper grain */
+body::after{
+  content:"";position:fixed;inset:0;z-index:2147483000;pointer-events:none;opacity:.05;
+  background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='240'%20height='240'%3E%3Cfilter%20id='n'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.9'%20numOctaves='2'/%3E%3C/filter%3E%3Crect%20width='240'%20height='240'%20filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode:multiply;
+}
+::selection{background:var(--vermilion);color:var(--newsprint)}
+a{color:inherit}
+img,svg{display:block;max-width:100%}
+:focus-visible{outline:3px solid var(--oxblood);outline-offset:3px;border-radius:1px}
+.dark :focus-visible,.oxfield :focus-visible{outline-color:var(--newsprint)}
+.skip{
+  position:absolute;left:-9999px;top:0;z-index:2147483200;
+  background:var(--ink);color:var(--newsprint);padding:.7rem 1.2rem;
+  font-family:var(--mono);font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;text-decoration:none;
+}
+.skip:focus-visible{left:12px;top:12px}
+.wrap{max-width:1180px;margin-inline:auto;padding-inline:clamp(18px,4vw,44px)}
+
+/* ---------- shared display type ---------- */
+.disp{font-family:var(--display);text-transform:uppercase;line-height:.92;letter-spacing:.005em}
+.mono{font-family:var(--mono)}
+.eyebrow{
+  display:inline-block;font-family:var(--mono);font-weight:700;font-size:.72rem;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--oxblood);
+  border-top:var(--rule) solid var(--oxblood);border-bottom:var(--rule) solid var(--oxblood);
+  padding:.45em 0;
+}
+.dark .eyebrow{color:var(--newsprint);border-color:var(--vermilion)}
+.oxfield .eyebrow{color:var(--newsprint);border-color:var(--newsprint)}
+.sect-head{margin-bottom:clamp(2rem,5vw,3.2rem)}
+.sect-title{font-weight:800;font-size:clamp(2.7rem,7vw,4.8rem);margin-top:.35em}
+.sect-title .red{color:var(--vermilion)}
+.lede{max-width:56ch;font-size:1.1rem;margin-top:1rem;color:var(--ink)}
+.dark .lede{color:var(--bone-muted)}
+.oxfield .lede{color:var(--newsprint)}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-block;font-family:var(--display);font-weight:700;text-transform:uppercase;
+  font-size:1.35rem;letter-spacing:.03em;line-height:1;text-decoration:none;cursor:pointer;
+  padding:.85em 1.3em .78em;border:var(--rule) solid var(--ink);
+  transition:transform .12s ease,box-shadow .12s ease;
+}
+.btn-primary{background:var(--oxblood);color:var(--newsprint);border-color:var(--ink);box-shadow:7px 7px 0 var(--ink)}
+.btn-primary:hover{transform:translate(2px,2px);box-shadow:5px 5px 0 var(--ink)}
+.btn-primary:active{transform:translate(7px,7px);box-shadow:0 0 0 var(--ink)}
+.btn-ghost{background:transparent;color:var(--ink);box-shadow:none}
+.btn-ghost:hover{background:var(--ink);color:var(--newsprint)}
+.dark .btn-primary{border-color:var(--newsprint);box-shadow:7px 7px 0 var(--vermilion)}
+.dark .btn-primary:hover{box-shadow:5px 5px 0 var(--vermilion)}
+.dark .btn-primary:active{box-shadow:0 0 0 var(--vermilion)}
+.dark .btn-ghost{color:var(--newsprint);border-color:var(--newsprint)}
+.dark .btn-ghost:hover{background:var(--newsprint);color:var(--ink)}
+
+/* ---------- top bar ---------- */
+header.masthead{border-bottom:var(--rule) solid var(--ink);background:var(--newsprint)}
+.masthead-in{display:flex;align-items:center;gap:1rem;padding-block:.8rem}
+.wordmark{display:flex;align-items:center;gap:.7rem;text-decoration:none}
+.wordmark .disp{font-size:1.9rem;font-weight:800;letter-spacing:.04em}
+.wordmark small{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--khaki);display:block;margin-top:.1rem}
+nav.statenav{margin-left:auto;display:flex;align-items:center;gap:1.4rem}
+nav.statenav a{font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;color:var(--ink);padding:.3rem 0;border-bottom:3px solid transparent}
+nav.statenav a:hover{border-bottom-color:var(--vermilion)}
+nav.statenav .nav-cta{border:var(--rule) solid var(--ink);background:var(--ink);color:var(--newsprint);padding:.55rem .9rem .5rem}
+nav.statenav .nav-cta:hover{background:var(--oxblood);border-color:var(--oxblood);border-bottom-color:var(--oxblood)}
+@media (max-width:760px){nav.statenav a:not(.nav-cta){display:none}}
+
+/* ---------- HERO ---------- */
+.hero{position:relative;overflow:clip;padding-block:clamp(3rem,7vw,6rem) clamp(4rem,8vw,7rem)}
+.hero-grid{position:relative;z-index:3}
+.tilt{transform:rotate(-5deg);transform-origin:left top;max-width:860px}
+.hero h1{font-weight:800;margin-top:1.1rem}
+.hero h1 .l1{display:block;font-size:clamp(4.6rem,16.5vw,12.5rem);letter-spacing:.01em}
+.hero h1 .l2{display:flex;flex-wrap:wrap;align-items:baseline;gap:.18em;font-size:clamp(2.2rem,7.8vw,5.9rem);margin-top:.08em}
+.hero h1 .from{color:var(--ink)}
+.cloudblock{
+  position:relative;display:inline-block;background:var(--ink);color:var(--newsprint);
+  padding:.12em .22em .06em;line-height:1;
+}
+.cloudblock::after{ /* the red slash of secession */
+  content:"";position:absolute;left:-6%;top:52%;width:112%;height:.14em;min-height:7px;
+  background:var(--vermilion);transform:rotate(-7deg);
+}
+.redbar{display:block;height:clamp(10px,1.6vw,18px);width:min(58%,340px);background:var(--vermilion);margin-top:clamp(.7rem,1.6vw,1.2rem)}
+.hero-sub{position:relative;z-index:3;max-width:56ch;margin-top:clamp(1.8rem,4vw,2.6rem);font-size:1.12rem}
+.hero-sub strong{font-weight:700}
+.hero-ctas{position:relative;z-index:3;display:flex;flex-wrap:wrap;gap:1.1rem;margin-top:2rem;align-items:center}
+.hero-census{position:relative;z-index:3;margin-top:2.4rem;display:inline-block;font-family:var(--mono);font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--khaki);border-top:var(--rule) solid var(--ink);padding-top:.6rem}
+/* hero shapes */
+.wedge{
+  position:absolute;z-index:1;left:-8vw;bottom:8%;width:58vw;max-width:760px;height:34vw;max-height:420px;
+  background:var(--vermilion);
+  clip-path:polygon(0 78%,0 100%,14% 100%,100% 12%,96% 0);
+  pointer-events:none;
+}
+.inkbar{position:absolute;z-index:1;background:var(--ink);pointer-events:none}
+.inkbar.b1{right:-4%;top:14%;width:44%;height:10px;transform:rotate(-32deg)}
+.inkbar.b2{right:-6%;top:22%;width:34%;height:10px;transform:rotate(-32deg)}
+.hero-seal{
+  position:absolute;z-index:2;right:clamp(-40px,2vw,70px);top:clamp(30px,6vw,60px);
+  width:clamp(190px,26vw,330px);transform:rotate(-5deg);
+}
+@media (max-width:900px){
+  .hero-seal{position:relative;right:auto;top:auto;width:210px;margin:2.4rem auto 0;display:block}
+  .wedge{bottom:0;width:80vw;height:52vw}
+  .inkbar.b1,.inkbar.b2{display:none}
+}
+
+/* print-registration load sequence */
+@keyframes stampInk{from{opacity:0;transform:translate(-14px,12px)}to{opacity:1;transform:translate(0,0)}}
+@keyframes stampRed{0%{opacity:0;transform:translate(18px,-14px)}70%{opacity:1;transform:translate(-3px,3px)}100%{opacity:1;transform:translate(0,0)}}
+@keyframes sealThump{0%{opacity:0;transform:rotate(5deg) scale(1.3)}60%{opacity:1;transform:rotate(-7deg) scale(.96)}100%{opacity:1;transform:rotate(-5deg) scale(1)}}
+@keyframes riseIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes ringSpin{to{transform:rotate(360deg)}}
+.pl-ink{animation:stampInk .5s cubic-bezier(.2,.8,.3,1) both}
+.pl-ink.d1{animation-delay:.08s}.pl-ink.d2{animation-delay:.18s}.pl-ink.d3{animation-delay:.28s}
+.pl-red{animation:stampRed .55s cubic-bezier(.2,.8,.3,1) both}
+.pl-red.d1{animation-delay:.5s}.pl-red.d2{animation-delay:.62s}
+.hero-seal{animation:sealThump .6s cubic-bezier(.2,.9,.3,1.2) .85s both}
+.pl-rise{animation:riseIn .55s ease-out 1.05s both}
+.seal-ringtext{transform-origin:100px 100px;animation:ringSpin 70s linear infinite}
+
+/* ---------- diagonal slogan band ---------- */
+.band{background:var(--newsprint);padding-block:clamp(24px,3.5vw,48px);overflow:clip}
+.band-in{
+  background:var(--ink);color:var(--newsprint);
+  transform:rotate(-1.6deg) scale(1.04);
+  padding:.9rem 0 .75rem;white-space:nowrap;overflow:clip;
+  font-family:var(--display);font-weight:700;text-transform:uppercase;
+  font-size:clamp(1.15rem,2.6vw,1.7rem);letter-spacing:.09em;
+}
+.band-in .star{color:var(--vermilion)}
+
+/* ---------- sections ---------- */
+section{padding-block:clamp(4rem,9vw,7.5rem)}
+.dark{background:var(--ink);color:var(--newsprint)}
+.oxfield{background:var(--oxblood);color:var(--newsprint)}
+
+/* ---------- constitution ---------- */
+.preamble{
+  border:var(--rule) solid var(--ink);background:var(--newsprint-hi);
+  padding:clamp(1.4rem,3.5vw,2.4rem);margin-bottom:3px;
+  box-shadow:8px 8px 0 var(--vermilion);
+  max-width:900px;
+}
+.preamble p{font-size:clamp(1.15rem,2.4vw,1.5rem);font-weight:500;line-height:1.5}
+.preamble p em{font-style:normal;color:var(--oxblood);font-weight:700}
+.preamble .mono{display:block;margin-top:1.1rem;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;color:var(--khaki)}
+.articles{
+  margin-top:clamp(2.4rem,5vw,3.4rem);
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:var(--rule);background:var(--ink);border:var(--rule) solid var(--ink);
+}
+@media (max-width:980px){.articles{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:640px){.articles{grid-template-columns:1fr}}
+.article{background:var(--newsprint);padding:1.6rem 1.5rem 1.8rem;position:relative;display:flex;flex-direction:column;gap:.8rem}
+.article:hover .art-num{background:var(--vermilion);color:var(--newsprint)}
+.art-top{display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.art-num{
+  font-family:var(--display);font-weight:800;font-size:2rem;line-height:1;
+  color:var(--ink);background:transparent;border:var(--rule) solid var(--ink);
+  padding:.35rem .55rem .2rem;min-width:3.2rem;text-align:center;
+  transition:background .15s ease,color .15s ease;
+}
+.art-glyph{color:var(--ink)}
+.article h3{font-family:var(--display);font-weight:700;text-transform:uppercase;font-size:1.75rem;letter-spacing:.02em}
+.article h3 span{color:var(--oxblood)}
+.art-law{font-weight:700;font-size:.95rem;line-height:1.45}
+.article p.clause{font-size:.95rem;color:var(--ink)}
+.article .cite{margin-top:auto;padding-top:.9rem;font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;text-transform:uppercase;color:var(--khaki)}
+
+/* ---------- dispatches (product moment) ---------- */
+.oxfield .sect-title{color:var(--newsprint)}
+.oxfield .sect-title .red{color:var(--newsprint);background:var(--vermilion);padding:.02em .12em}
+.wirehead{
+  display:flex;flex-wrap:wrap;gap:.6rem 1.6rem;align-items:baseline;
+  border:var(--rule) solid var(--newsprint);padding:.8rem 1rem;
+  font-family:var(--mono);font-size:.68rem;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--newsprint);
+  margin-bottom:2.6rem;
+}
+.wirehead .hot{color:var(--newsprint);background:var(--ink);padding:.15em .5em;box-shadow:-6px 0 0 var(--vermilion)}
+.spine{position:relative;max-width:940px;margin-inline:auto}
+.spine::before{content:"";position:absolute;left:50%;top:-14px;bottom:-14px;width:6px;margin-left:-3px;background:var(--vermilion)}
+.strip{
+  position:relative;width:calc(50% - 34px);background:var(--newsprint);color:var(--ink);
+  border:var(--rule) solid var(--ink);box-shadow:8px 8px 0 var(--ink);
+  padding:1.1rem 1.2rem 1.2rem;margin-bottom:2.2rem;
+}
+.strip::before{ /* wire connector */
+  content:"";position:absolute;top:26px;width:34px;height:4px;background:var(--vermilion);
+}
+.strip.left{margin-right:auto;transform:rotate(-.7deg)}
+.strip.left::before{right:-37px}
+.strip.right{margin-left:auto;transform:rotate(.6deg)}
+.strip.right::before{left:-37px}
+.strip .meta{display:flex;flex-wrap:wrap;gap:.4rem .9rem;align-items:center;font-family:var(--mono);font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--oxblood);margin-bottom:.55rem}
+.strip .meta .tz{color:var(--khaki)}
+.strip .msg{font-size:1rem;line-height:1.5}
+.strip .tag{
+  display:inline-block;margin-top:.7rem;font-family:var(--mono);font-size:.6rem;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--khaki);
+  border:2px solid var(--khaki);padding:.28em .55em;
+}
+.stamp{
+  position:absolute;right:-14px;top:-16px;transform:rotate(7deg);
+  font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--oxblood);border:3px double var(--oxblood);padding:.35em .6em;background:var(--newsprint);
+}
+.strip.alert{border-color:var(--oxblood);border-width:5px;box-shadow:8px 8px 0 var(--ink)}
+.strip.alert .msg{font-weight:600}
+.alert-head{display:flex;align-items:center;gap:.5rem;font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:1.6rem;color:var(--oxblood);margin-bottom:.4rem}
+.burnrow{display:flex;flex-wrap:wrap;gap:.35em;margin-block:.4rem .7rem}
+.burnrow i{display:inline-block;height:.95em;background:var(--ink);border-radius:1px}
+.qr-strip{display:flex;gap:1.1rem;align-items:flex-start}
+.qr-strip svg{flex:0 0 auto}
+.wave{display:flex;align-items:flex-end;gap:3px;height:44px;margin-block:.5rem .7rem}
+.wave i{width:5px;background:var(--oxblood)}
+.exhibit{
+  max-width:940px;margin:3rem auto 0;background:var(--ink);color:var(--bone-muted);
+  border:var(--rule) solid var(--newsprint);padding:1.3rem 1.4rem;position:relative;transform:rotate(-.4deg);
+}
+.exhibit .label{font-family:var(--mono);font-size:.66rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--newsprint);margin-bottom:.7rem}
+.exhibit code{font-family:var(--mono);font-size:.72rem;line-height:1.8;word-break:break-all;color:var(--bone-muted)}
+.exhibit .stamp{color:var(--newsprint);border-color:var(--vermilion);background:var(--ink);font-size:.66rem;right:18px;top:-18px}
+@media (max-width:760px){
+  .spine::before{left:10px;margin-left:0}
+  .strip{width:auto;margin-left:34px !important;margin-right:0 !important;transform:none !important}
+  .strip.left::before,.strip.right::before{left:-27px;right:auto;width:24px}
+  .stamp{right:8px}
+  .exhibit{transform:none}
+}
+
+/* ---------- territory (dark, article VII) ---------- */
+.terr-grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(2rem,5vw,4rem);align-items:start;margin-top:2.5rem}
+@media (max-width:920px){.terr-grid{grid-template-columns:1fr}}
+.terr-copy p{margin-bottom:1.1rem;color:var(--bone-muted)}
+.terr-copy p strong{color:var(--newsprint)}
+.terr-copy .landlord{
+  border-left:6px solid var(--vermilion);padding:.4rem 0 .4rem 1.1rem;margin-top:1.6rem;
+  font-size:1.15rem;font-weight:600;color:var(--newsprint);
+}
+.terminal{
+  background:var(--ink-soft);border:var(--rule) solid var(--newsprint);
+  box-shadow:10px 10px 0 var(--vermilion);
+}
+.term-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  border-bottom:var(--rule) solid var(--newsprint);padding:.6rem .9rem;
+}
+.term-bar .t{font-family:var(--mono);font-size:.62rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--bone-muted)}
+.copybtn{
+  font-family:var(--mono);font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  background:var(--vermilion);color:var(--newsprint);border:2px solid var(--newsprint);
+  padding:.45em .8em;cursor:pointer;transition:transform .1s ease;
+}
+.copybtn:hover{transform:translate(1px,1px)}
+.copybtn.copied{background:var(--newsprint);color:var(--ink)}
+.term-body{padding:1.1rem 1rem 1.3rem;font-family:var(--mono);font-size:.78rem;line-height:2.05;overflow-x:auto}
+.term-body .ps{color:var(--vermilion);font-weight:700}
+.term-body .cmd{color:var(--newsprint);font-weight:700}
+.term-body .ok{color:var(--bone-muted)}
+.term-body .ok b{color:var(--newsprint);font-weight:700}
+.visa{
+  display:inline-block;margin-top:1.4rem;transform:rotate(-4deg);
+  border:3px double var(--bone-muted);color:var(--bone-muted);
+  font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  padding:.6em .9em;line-height:1.9;
+}
+.visa b{color:var(--newsprint)}
+.specs{margin-top:clamp(2.5rem,6vw,3.5rem);display:grid;grid-template-columns:repeat(3,1fr);gap:var(--rule);background:var(--newsprint);border:var(--rule) solid var(--newsprint)}
+@media (max-width:920px){.specs{grid-template-columns:1fr}}
+.spec{background:var(--ink);padding:1.2rem 1.2rem 1.35rem}
+.spec .k{font-family:var(--mono);font-size:.62rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--vermilion);margin-bottom:.45rem}
+.spec .v{font-family:var(--display);font-weight:700;text-transform:uppercase;font-size:1.5rem;line-height:1.05;color:var(--newsprint)}
+.spec p{margin-top:.5rem;font-size:.85rem;color:var(--bone-muted)}
+
+/* ---------- ratification ---------- */
+.ratify{position:relative;overflow:clip;text-align:left}
+.ratify .tilt2{transform:rotate(-4deg);transform-origin:left center;max-width:900px}
+.ratify h2{font-weight:800;font-size:clamp(3.4rem,12vw,8.6rem);line-height:.9}
+.ratify h2 .red{color:var(--vermilion)}
+.ratify .redbar{width:min(46%,300px)}
+.ratify-sub{max-width:52ch;margin-top:2rem;font-size:1.12rem}
+.ratify-ctas{display:flex;flex-wrap:wrap;gap:1.1rem;margin-top:2rem;align-items:center}
+.ratify-note{margin-top:1.6rem;font-family:var(--mono);font-size:.66rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--khaki)}
+.ratify .corner-wedge{position:absolute;right:-6%;bottom:-2%;width:34vw;max-width:420px;height:24vw;max-height:300px;background:var(--vermilion);clip-path:polygon(100% 0,100% 100%,0 100%);pointer-events:none}
+@media (max-width:700px){.ratify .corner-wedge{display:none}}
+
+/* ---------- footer ---------- */
+footer{background:var(--ink);color:var(--bone-muted);border-top:8px solid var(--vermilion);padding-block:3.5rem 2.5rem}
+.foot-grid{display:grid;grid-template-columns:auto 1fr 1fr;gap:clamp(2rem,6vw,5rem);align-items:start}
+@media (max-width:760px){.foot-grid{grid-template-columns:1fr}}
+.foot-brand .disp{color:var(--newsprint);font-size:1.7rem;font-weight:800;margin-top:.9rem}
+.foot-brand small{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase}
+.foot-col h4{font-family:var(--mono);font-size:.64rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--vermilion);margin-bottom:1rem}
+.foot-col a{display:block;text-decoration:none;color:var(--bone-muted);font-size:.95rem;padding-block:.3rem;width:fit-content;border-bottom:2px solid transparent}
+.foot-col a:hover{color:var(--newsprint);border-bottom-color:var(--vermilion)}
+.foot-legal{margin-top:3rem;border-top:2px solid var(--ink-soft);padding-top:1.4rem;display:flex;flex-wrap:wrap;gap:.8rem 2.4rem;justify-content:space-between;font-family:var(--mono);font-size:.62rem;letter-spacing:.08em;line-height:1.9}
+.foot-legal .fict{color:var(--newsprint)}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation:none !important;transition:none !important}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="masthead">
+  <div class="wrap masthead-in">
+    <a class="wordmark" href="#top" aria-label="Enklav — home">
+      <!-- mini seal -->
+      <svg width="40" height="40" viewBox="0 0 64 64" aria-hidden="true">
+        <rect width="64" height="64" fill="none"/>
+        <circle cx="32" cy="32" r="29" fill="none" stroke="#171310" stroke-width="4"/>
+        <circle cx="32" cy="32" r="20" fill="#171310"/>
+        <polygon points="8,58 20,63 38,30" fill="#C2340F"/>
+        <circle cx="41" cy="23" r="5" fill="#EAE3D1"/>
+      </svg>
+      <span>
+        <span class="disp">ENKLAV</span>
+        <small>The sovereign messenger</small>
+      </span>
+    </a>
+    <nav class="statenav" aria-label="State">
+      <a href="#constitution">Constitution</a>
+      <a href="#dispatches">Dispatches</a>
+      <a href="#territory">Territory</a>
+      <a class="nav-cta" href="#ratify">Found your nation</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="top" aria-label="Proclamation">
+  <div class="wedge pl-red d1" aria-hidden="true"></div>
+  <div class="inkbar b1 pl-ink d2" aria-hidden="true"></div>
+  <div class="inkbar b2 pl-ink d3" aria-hidden="true"></div>
+
+  <!-- THE STATE SEAL (signature element) -->
+  <svg class="hero-seal" viewBox="0 0 200 200" role="img" aria-label="State seal of Enklav: a red wedge carrying a key into a black disc, ringed by the words Sovereign Messenger, Population 3 to 50, Cipher or Nothing">
+    <defs>
+      <path id="ringPath" d="M 100,100 m -73,0 a 73,73 0 1,1 146,0 a 73,73 0 1,1 -146,0"/>
+      <clipPath id="discClip"><circle cx="100" cy="100" r="57"/></clipPath>
+    </defs>
+    <circle cx="100" cy="100" r="97" fill="var(--newsprint)"/>
+    <circle cx="100" cy="100" r="95" fill="none" stroke="var(--ink)" stroke-width="5"/>
+    <circle cx="100" cy="100" r="86" fill="none" stroke="var(--ink)" stroke-width="2"/>
+    <circle cx="100" cy="100" r="60" fill="none" stroke="var(--ink)" stroke-width="2"/>
+    <circle cx="100" cy="100" r="57" fill="var(--ink)"/>
+    <g clip-path="url(#discClip)">
+      <polygon points="28,176 62,190 116,86" fill="var(--vermilion)"/>
+    </g>
+    <circle cx="124" cy="74" r="11" fill="var(--newsprint)"/>
+    <circle cx="124" cy="74" r="4.5" fill="var(--ink)"/>
+    <rect x="120" y="84" width="8" height="7" fill="var(--newsprint)"/>
+    <g class="seal-ringtext">
+      <text font-family="'Martian Mono',monospace" font-size="10" font-weight="700" letter-spacing="1.5" fill="var(--ink)">
+        <textPath href="#ringPath" startOffset="0" textLength="456" lengthAdjust="spacingAndGlyphs">★ SOVEREIGN MESSENGER ★ POPULATION 3–50 ★ CIPHER OR NOTHING</textPath>
+      </text>
+    </g>
+  </svg>
+
+  <div class="wrap hero-grid">
+    <div class="tilt">
+      <span class="eyebrow pl-ink d1">Proclamation № 1 — to all scattered peoples</span>
+      <h1 class="disp">
+        <span class="l1 pl-ink d2">Secede</span>
+        <span class="l2 pl-ink d3"><span class="from">from</span> <span class="cloudblock">the&nbsp;cloud</span></span>
+      </h1>
+      <span class="redbar pl-red d2" aria-hidden="true"></span>
+    </div>
+
+    <p class="hero-sub pl-rise">
+      Enklav is a messenger that is also a country. One small binary on a server you
+      rent for $5 becomes the <strong>territory</strong>. The people you invite become the
+      <strong>citizens</strong>. Every message is sealed on your own device — X3DH and a
+      Double&nbsp;Ratchet at the border — so the server, even yours, holds nothing but
+      ciphertext. No company in the middle. No phone numbers. No one to answer to
+      but each other.
+    </p>
+
+    <div class="hero-ctas pl-rise">
+      <a class="btn btn-primary" href="#territory">Found your nation</a>
+      <a class="btn btn-ghost" href="#constitution">Read the constitution</a>
+    </div>
+
+    <p class="hero-census pl-rise">Population 3–50 · Territory: one small server · Founded: tonight</p>
+  </div>
+</section>
+
+<!-- ============ SLOGAN BAND ============ -->
+<div class="band" aria-hidden="true">
+  <div class="band-in">
+    <span> NO PHONE NUMBERS <span class="star">★</span> NO LANDLORD <span class="star">★</span> NO TELEMETRY <span class="star">★</span> NO COMPANY IN THE MIDDLE <span class="star">★</span> NO PHONE NUMBERS <span class="star">★</span> NO LANDLORD <span class="star">★</span> NO TELEMETRY <span class="star">★</span> NO COMPANY IN THE MIDDLE <span class="star">★</span> NO PHONE NUMBERS <span class="star">★</span> NO LANDLORD <span class="star">★</span> NO TELEMETRY </span>
+  </div>
+</div>
+
+<!-- ============ CONSTITUTION ============ -->
+<section id="constitution" aria-label="The Constitution">
+  <div class="wrap">
+    <div class="sect-head">
+      <span class="eyebrow">Ratified by everyone it applies to</span>
+      <h2 class="disp sect-title">The <span class="red">Constitution</span></h2>
+    </div>
+
+    <div class="preamble">
+      <p>We, the three to fifty, in order to form a more private union, do ordain a wire
+      of our own: <em>our server, our keys, our people</em> — and grant the rest of the
+      internet nothing, not even our names.</p>
+      <span class="mono">Preamble · binding wherever the citizens stand</span>
+    </div>
+
+    <div class="articles">
+
+      <article class="article">
+        <div class="art-top">
+          <span class="art-num" aria-hidden="true">I</span>
+          <svg class="art-glyph" width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M23 8 V3 H3 v20 h20 v-5"/>
+            <path d="M14 13 h11 M20 13 v4 M24 13 v3"/>
+          </svg>
+        </div>
+        <h3>The <span>Border</span></h3>
+        <p class="art-law">No public sign-up. No phone number. No strangers, ever.</p>
+        <p class="clause">Citizenship is a cryptographic invite token signed by a current
+        citizen — and revoked the moment trust ends. The door has no handle on the
+        outside.</p>
+        <span class="cite">Art. I · entry &amp; exile</span>
+      </article>
+
+      <article class="article">
+        <div class="art-top">
+          <span class="art-num" aria-hidden="true">II</span>
+          <svg class="art-glyph" width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <circle cx="13" cy="13" r="10"/>
+            <circle cx="13" cy="13" r="5"/>
+            <circle cx="13" cy="13" r="1" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
+        <h3>The <span>Cipher</span></h3>
+        <p class="art-law">Every message is sealed before it travels. Always. By default.</p>
+        <p class="clause">X3DH agrees the keys; the Double Ratchet turns them with every
+        message. Keys never leave your hardware. The wire carries envelopes — it has
+        never once seen a letter.</p>
+        <span class="cite">Art. II · encryption of record</span>
+      </article>
+
+      <article class="article">
+        <div class="art-top">
+          <span class="art-num" aria-hidden="true">III</span>
+          <svg class="art-glyph" width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <rect x="3" y="3" width="20" height="20"/>
+            <path d="M7 8h.01M12 6h.01M17 9h.01M8 13h.01M14 12h.01M19 15h.01M7 18h.01M12 17h.01M17 20h.01" stroke-linecap="round" stroke-width="3"/>
+          </svg>
+        </div>
+        <h3>The <span>Archive</span></h3>
+        <p class="art-law">Storage is zero-knowledge. A stolen disk is a brick of noise.</p>
+        <p class="clause">A subpoena returns the same noise, notarized. Your history exists
+        only on the devices of the citizens — nowhere else has anything worth taking.</p>
+        <span class="cite">Art. III · what a raid recovers: nothing</span>
+      </article>
+
+      <article class="article">
+        <div class="art-top">
+          <span class="art-num" aria-hidden="true">IV</span>
+          <svg class="art-glyph" width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M13 23 a10 10 0 1 1 0-20"/>
+            <path d="M13 18 a5 5 0 1 1 0-10"/>
+            <path d="M13 14.5 a1.5 1.5 0 1 1 0-3"/>
+          </svg>
+        </div>
+        <h3>The <span>Census</span></h3>
+        <p class="art-law">Every citizen, every device, its own key.</p>
+        <p class="clause">Verify each other by QR safety number — in person when you can.
+        If a key ever changes, Enklav announces it loudly and blocks nothing quietly.
+        A lost phone is struck from the census and remote-wiped.</p>
+        <span class="cite">Art. IV · verification &amp; the lost device</span>
+      </article>
+
+      <article class="article">
+        <div class="art-top">
+          <span class="art-num" aria-hidden="true">V</span>
+          <svg class="art-glyph" width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M3 13 c3-5 7-7.5 10-7.5 s7 2.5 10 7.5 c-3 5-7 7.5-10 7.5 s-7-2.5-10-7.5 Z"/>
+            <path d="M2 24 L24 2"/>
+          </svg>
+        </div>
+        <h3>The <span>Silence</span></h3>
+        <p class="art-law">Sealed sender. Starved metadata. Timed ash.</p>
+        <p class="clause">The server cannot say who talks to whom, or how often — what is
+        never recorded can never leak. Channels burn on a timer, messages burn on
+        read, and one command vanishes everything, everywhere.</p>
+        <span class="cite">Art. V · the right to be unrecorded</span>
+      </article>
+
+      <article class="article">
+        <div class="art-top">
+          <span class="art-num" aria-hidden="true">VI</span>
+          <svg class="art-glyph" width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M9 3 H3 v20 h6 M17 3 h6 v20 h-6"/>
+            <circle cx="13" cy="13" r="1.5" fill="currentColor" stroke="none"/>
+          </svg>
+        </div>
+        <h3>The <span>Record</span></h3>
+        <p class="art-law">The whole state is open source, with reproducible builds.</p>
+        <p class="clause">The binary you run provably matches the code you can read — build
+        it yourself and compare hashes. Telemetry: none. There is no capital to
+        report back to.</p>
+        <span class="cite">Art. VI · trust, then verify the compiler</span>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ DISPATCHES (product moment) ============ -->
+<section class="oxfield" id="dispatches" aria-label="Dispatches from the interior">
+  <div class="wrap">
+    <div class="sect-head">
+      <span class="eyebrow">One evening on the wire, four timezones apart</span>
+      <h2 class="disp sect-title">Dispatches from <span class="red">the interior</span></h2>
+    </div>
+
+    <div class="wirehead" role="presentation">
+      <span>Channel — <span class="hot">THE COURTYARD</span></span>
+      <span>11 citizens</span>
+      <span>Dispatches burn after 7 days</span>
+      <span>Low-bandwidth mode: on</span>
+    </div>
+
+    <div class="spine">
+
+      <div class="strip left">
+        <p class="meta"><span>Citizen A. Oyelaran</span><span class="tz">Lagos · 23:41</span></p>
+        <p class="msg">Moved us to the new box tonight. Same nation, new soil — the border
+        came up before my coffee cooled. Nobody outside noticed a thing.</p>
+        <span class="tag">Deciphered on this device</span>
+      </div>
+
+      <div class="strip right">
+        <p class="meta"><span>Citizen M. Voss</span><span class="tz">Berlin · 05:12 → sent 06:03</span></p>
+        <p class="msg">Writing this from a dead spot on the night train. Send anyway —
+        it'll cross when the wire comes back.</p>
+        <span class="tag">Queued offline · delta-synced · 61 KB</span>
+      </div>
+
+      <div class="strip left alert">
+        <div class="alert-head">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <path d="M5 21 V2"/><path d="M5 3 h13 l-3.5 4 L18 11 H5" fill="currentColor" stroke="none"/>
+          </svg>
+          Halt — key change
+        </div>
+        <p class="msg">R. Ibarra's key changed on device № 3. Could be her new laptop.
+        Could be someone else's. Verify at the border before you say anything that
+        matters.</p>
+        <span class="tag">Loud by design · cannot be muted</span>
+        <span class="stamp">Unverified</span>
+      </div>
+
+      <div class="strip right">
+        <p class="meta"><span>Citizen R. Ibarra</span><span class="tz">Bogotá · 17:26</span></p>
+        <div class="qr-strip">
+          <svg width="72" height="72" viewBox="0 0 84 84" role="img" aria-label="QR safety-number code">
+            <rect width="84" height="84" fill="#171310"/>
+            <g fill="#EAE3D1">
+              <path d="M6 6h24v24H6zm6 6v12h12V12z"/>
+              <path d="M54 6h24v24H54zm6 6v12h12V12z"/>
+              <path d="M6 54h24v24H6zm6 6v12h12V60z"/>
+              <rect x="36" y="6" width="6" height="6"/><rect x="42" y="12" width="6" height="6"/>
+              <rect x="36" y="24" width="6" height="6"/><rect x="48" y="18" width="6" height="6"/>
+              <rect x="36" y="36" width="6" height="6"/><rect x="48" y="36" width="6" height="6"/>
+              <rect x="60" y="36" width="6" height="6"/><rect x="72" y="42" width="6" height="6"/>
+              <rect x="42" y="48" width="6" height="6"/><rect x="54" y="54" width="6" height="6"/>
+              <rect x="66" y="54" width="6" height="6"/><rect x="36" y="60" width="6" height="6"/>
+              <rect x="48" y="66" width="6" height="6"/><rect x="60" y="72" width="6" height="6"/>
+              <rect x="72" y="60" width="6" height="6"/><rect x="42" y="72" width="6" height="6"/>
+              <rect x="12" y="36" width="6" height="6"/><rect x="24" y="42" width="6" height="6"/>
+              <rect x="6" y="42" width="6" height="6"/><rect x="18" y="36" width="6" height="6"/>
+            </g>
+          </svg>
+          <div>
+            <p class="msg">It's the new laptop — scan me. Safety № 60214 88317 45120 09983.</p>
+            <span class="tag">Matched by K. Sedláček · verified</span>
+          </div>
+        </div>
+        <span class="stamp" style="color:var(--khaki);border-color:var(--khaki)">Re-verified</span>
+      </div>
+
+      <div class="strip left">
+        <p class="meta"><span>Citizen K. Sedláček</span><span class="tz">Prague · 00:19</span></p>
+        <div class="wave" aria-hidden="true">
+          <i style="height:30%"></i><i style="height:65%"></i><i style="height:45%"></i><i style="height:90%"></i>
+          <i style="height:55%"></i><i style="height:100%"></i><i style="height:40%"></i><i style="height:75%"></i>
+          <i style="height:25%"></i><i style="height:60%"></i><i style="height:85%"></i><i style="height:35%"></i>
+          <i style="height:70%"></i><i style="height:50%"></i><i style="height:20%"></i><i style="height:55%"></i>
+          <i style="height:80%"></i><i style="height:30%"></i><i style="height:45%"></i><i style="height:15%"></i>
+        </div>
+        <p class="msg">Call ended — 47 minutes, voice and screen share, relayed through
+        the box in Ade's basement. The recording exists nowhere, because there isn't one.</p>
+        <span class="tag">Encrypted call · your relay, not ours</span>
+      </div>
+
+      <div class="strip right">
+        <p class="meta"><span>Citizen M. Voss</span><span class="tz">Berlin · 06:04 · burn-on-read</span></p>
+        <div class="burnrow" aria-label="A message that was read once and destroyed">
+          <i style="width:14%"></i><i style="width:9%"></i><i style="width:19%"></i><i style="width:7%"></i>
+          <i style="width:23%"></i><i style="width:12%"></i><i style="width:31%"></i><i style="width:16%"></i>
+          <i style="width:11%"></i><i style="width:26%"></i><i style="width:8%"></i>
+        </div>
+        <p class="msg" style="font-size:.85rem;color:var(--khaki)">Read once in Lagos. Ash seven seconds later — here,
+        there, and on every relay in between.</p>
+        <span class="stamp">Burned</span>
+      </div>
+
+    </div>
+
+    <div class="exhibit">
+      <p class="label">Meanwhile — the server's entire knowledge of that evening:</p>
+      <code>x9dK4:vLq81mZo3TfWnUyE7cJhRb0AgQsX2pN6MiCwB5rHtOaFj8kY1eDzuP0mS4vGxLQ7nJ9…
+b2Rw6:HcT3yAkX8mE1oZfN5qUv0WdJgL4siPCB9rYtM7haGnK2xIeQ0uOjS8pDzF6vRwT1…
+k7Fp2:qN9mW3xTzE5vRyU8cLbJ0hAgS6dQoX4wPiKB1rMtH2naYe7GkC0uIjZfD8sVmL3…</code>
+      <span class="stamp">Noise</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TERRITORY (self-host, dark) ============ -->
+<section class="dark" id="territory" aria-label="Article seven: the territory">
+  <div class="wrap">
+    <div class="sect-head">
+      <span class="eyebrow">Article VII — large enough to need its own page</span>
+      <h2 class="disp sect-title" style="color:var(--newsprint)">The <span style="color:var(--vermilion)">Territory</span></h2>
+      <p class="lede">A nation needs land. Yours is 71 megabytes.</p>
+    </div>
+
+    <div class="terr-grid">
+      <div class="terr-copy">
+        <p>Enklav is <strong>one static binary</strong>. It annexes a $5 VPS, a Raspberry Pi
+        on a bookshelf, the old laptop in a basement in Lagos. No Docker, no database
+        to babysit, no ops team — one command and the border is up.</p>
+        <p>The same box relays your <strong>voice, video and screen share</strong>, queues
+        dispatches for citizens who are offline, and delta-syncs the stragglers when
+        their train leaves the tunnel. Move the whole country to new soil with one
+        file. Nobody outside will notice.</p>
+        <p class="landlord">The server is not our product. It is your soil. We can't read
+        it, rent it, or lose it in an acquisition — we were never on it.</p>
+      </div>
+
+      <div>
+        <div class="terminal">
+          <div class="term-bar">
+            <span class="t">root@your-soil — tty1</span>
+            <button class="copybtn" type="button" data-copy="./enklav serve --nation courtyard" aria-label="Copy the command: ./enklav serve --nation courtyard">Copy command</button>
+          </div>
+          <div class="term-body">
+            <div><span class="ps">$</span> <span class="cmd">./enklav serve --nation courtyard</span></div>
+            <div class="ok">▸ territory established · 71 MB resident · port 443</div>
+            <div class="ok">▸ ciphertext store mounted · plaintext capacity: <b>zero</b></div>
+            <div><span class="ps">$</span> <span class="cmd">./enklav invite --citizen mara --expires 72h</span></div>
+            <div class="ok">▸ visa issued: <b>envk1-qm7v-rradio-t9k2</b> · revocable</div>
+          </div>
+        </div>
+        <span class="visa">Visa № 0047 · <b>entry granted</b> · signed by a citizen<br>expires in 72 h unless used · revocable at any hour</span>
+      </div>
+    </div>
+
+    <div class="specs">
+      <div class="spec">
+        <p class="k">Land requirement</p>
+        <p class="v disp">A $5 VPS<br>or a Raspberry Pi</p>
+        <p>128 MB of RAM governs fifty citizens with room to spare.</p>
+      </div>
+      <div class="spec">
+        <p class="k">Distance policy</p>
+        <p class="v disp">Built for<br>bad hotel wi-fi</p>
+        <p>Offline queue, delta sync and a low-bandwidth mode for the citizen on a train.</p>
+      </div>
+      <div class="spec">
+        <p class="k">Succession plan</p>
+        <p class="v disp">One file,<br>new soil</p>
+        <p>Copy the state, point the domain, carry on. The nation outlives any single server.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ RATIFICATION ============ -->
+<section class="ratify" id="ratify" aria-label="Ratification">
+  <div class="corner-wedge" aria-hidden="true"></div>
+  <div class="wrap">
+    <span class="eyebrow">Ratification requires only the people in the room</span>
+    <div class="tilt2" style="margin-top:1.2rem">
+      <h2 class="disp">Found<br>your <span class="red">nation</span></h2>
+      <span class="redbar" aria-hidden="true"></span>
+    </div>
+    <p class="ratify-sub">Bring the three to fifty people you actually trust. Leave everyone
+    else — every company, every broker, every subpoena — outside the border.</p>
+    <div class="ratify-ctas">
+      <a class="btn btn-primary" href="#top">Download the binary</a>
+      <a class="btn btn-ghost" href="#constitution">Read the source</a>
+    </div>
+    <p class="ratify-note">Free forever · it's your country · 71 MB, sha-pinned, reproducible</p>
+  </div>
+</section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer>
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <svg width="56" height="56" viewBox="0 0 64 64" aria-hidden="true">
+          <circle cx="32" cy="32" r="29" fill="none" stroke="#EAE3D1" stroke-width="4"/>
+          <circle cx="32" cy="32" r="20" fill="#EAE3D1"/>
+          <polygon points="8,58 20,63 38,30" fill="#C2340F"/>
+          <circle cx="41" cy="23" r="5" fill="#171310"/>
+        </svg>
+        <p class="disp">ENKLAV</p>
+        <small>Ministry of the Wire</small>
+      </div>
+      <div class="foot-col">
+        <h4>The State</h4>
+        <a href="#constitution">The Constitution</a>
+        <a href="#dispatches">Dispatches</a>
+        <a href="#territory">The Territory</a>
+        <a href="#ratify">Ratification</a>
+      </div>
+      <div class="foot-col">
+        <h4>The Record</h4>
+        <a href="#top">Source code</a>
+        <a href="#top">Reproducible builds</a>
+        <a href="#top">Threat model</a>
+        <a href="#top">Revoke an invite</a>
+      </div>
+    </div>
+    <div class="foot-legal">
+      <span class="fict">Enklav is a fictional product — a design concept for a self-hosted,
+      end-to-end encrypted, invite-only messenger. No nation was actually founded.</span>
+      <span>build 1.0.0 · sha256 9f2a…c41e · reproduced by 14 citizens · telemetry: none, not even on this page</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  /* Copy command — clipboard API with execCommand fallback */
+  var btns = document.querySelectorAll(".copybtn");
+  function markCopied(btn){
+    var old = btn.textContent;
+    btn.textContent = "Copied — go";
+    btn.classList.add("copied");
+    window.setTimeout(function(){
+      btn.textContent = old;
+      btn.classList.remove("copied");
+    }, 1800);
+  }
+  function fallbackCopy(text, btn){
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly","");
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    document.body.appendChild(ta);
+    ta.select();
+    try{
+      if(document.execCommand("copy")){ markCopied(btn); }
+    }catch(e){ /* leave the command visible for manual copy */ }
+    document.body.removeChild(ta);
+  }
+  Array.prototype.forEach.call(btns, function(btn){
+    btn.addEventListener("click", function(){
+      var text = btn.getAttribute("data-copy") || "";
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(function(){ markCopied(btn); },
+          function(){ fallbackCopy(text, btn); });
+      }else{
+        fallbackCopy(text, btn);
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
